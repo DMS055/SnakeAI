@@ -83,7 +83,7 @@ class Agent:
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0) # Execute forward()
-            move.torch.argmax(prediction).item()
+            move = torch.argmax(prediction).item()
             final_move[move] = 1
         
         return final_move
@@ -123,11 +123,11 @@ def train():
                 agent.model.save() 
                 
             cprint("Game:", attrs=["bold", "reverse"])
-            cprint(agent.n_games + "\n", attrs=["bold", "underline"])
+            cprint(str(agent.n_games) + "\n", attrs=["bold", "underline"])
             cprint("Score:", attrs=["bold", "reverse"])
-            cprint(score + "\n", attrs=["bold", "underline"])
+            cprint(str(score) + "\n", attrs=["bold", "underline"])
             cprint("Current Record:", attrs=["bold", "reverse"])
-            cprint(record, attrs=["bold", "underline"])
+            cprint(str(record) + "\n", attrs=["bold", "underline"])
             
             plot_scores.append(score)
             total_score += score
