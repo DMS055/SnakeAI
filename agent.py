@@ -1,5 +1,6 @@
 import torch
 import random
+from termcolor import cprint
 import numpy as np
 from collections import deque
 from game import SnakeGameAI, Direction, Point
@@ -64,6 +65,13 @@ def train():
             if score > record:
                 record = score
                 # TODO: agent.model.save() 
+                
+            cprint("Game:", attrs=["bold", "reverse"])
+            cprint(agent.n_games + "\n", attrs=["bold", "underline"])
+            cprint("Score:", attrs=["bold", "reverse"])
+            cprint(score + "\n", attrs=["bold", "underline"])
+            cprint("Current Record:", attrs=["bold", "reverse"])
+            cprint(record, attrs=["bold", "underline"])
             
 
 if __name__ == '__main__':
