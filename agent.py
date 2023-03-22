@@ -4,19 +4,20 @@ from termcolor import cprint
 import numpy as np
 from collections import deque
 from game import SnakeGameAI, Direction, Point
+from model import Linear_QNET, QTrainer
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
-LR = 0.001
+LR = 0.001 # Learning rate
 
 class Agent:
     def __init__(self):
         self.n_games = 0
         self.epsilon = 0 # Randomness factor
-        self.gamma = 0 # Discount Rate
+        self.gamma = 0.9 # Discount rate !IMPORTANT: must be smaller than 1
         self.memory = deque(maxlen=MAX_MEMORY) # popleft() if exceeded
-        self.model = None # TODO
-        self.trainer = None # TODO
+        self.model = Linear_QNET(11, 256, 3) # [state size, {can be changed} hidden size, action]
+        self.trainer = QTrainer(self.model, lr = LR, gamma = self.gamma)
     
     def get_state(self, game):
         head = game.snake[0]
@@ -80,7 +81,7 @@ class Agent:
             final_move[move] = 1
         else:
             state0 = torch.tensor(state, dtype=torch.float)
-            prediction = self.model.predict(state0)
+            prediction = self.model(state0) # Execute forward()
             move.torch.argmax(prediction).item()
             final_move[move] = 1
         
@@ -118,7 +119,7 @@ def train():
             
             if score > record:
                 record = score
-                # TODO: agent.model.save() 
+                agent.model.save() 
                 
             cprint("Game:", attrs=["bold", "reverse"])
             cprint(agent.n_games + "\n", attrs=["bold", "underline"])
