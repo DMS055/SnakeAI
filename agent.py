@@ -18,7 +18,42 @@ class Agent:
         # TODO: model, trainer
     
     def get_state(self, game):
-        pass
+        head = game.snake[0]
+
+        # Clok-wise directions and angles
+        cw_dirs = [
+            Direction.RIGHT == game.direction,
+            Direction.DOWN == game.direction,
+            Direction.LEFT == game.direction,
+            Direction.UP == game.direction
+        ]
+        cw_angs = np.array([0, np.pi/2, np.pi, -np.pi/2])
+
+        # Position - in front: 0, on right: 1, on left: -1; BLOCK_SIZE = 20
+        def getPoint(pos): return Point(
+            head.x + 20*np.cos(cw_angs[(cw_dirs.index(True)+pos) % 4]),
+            head.y + 20*np.sin(cw_angs[(cw_dirs.index(True)+pos) % 4]))
+
+        state = [
+            # Danger
+            game.is_collision(getPoint(0)),
+            game.is_collision(getPoint(1)),
+            game.is_collision(getPoint(-1)),
+
+            # Move direction
+            cw_dirs[2],
+            cw_dirs[0],
+            cw_dirs[3],
+            cw_dirs[1],
+
+            # Food location
+            game.food.x < head.x,
+            game.food.x > head.x,
+            game.food.y < head.y,
+            game.food.y > head.y
+        ]
+
+        return np.array(state, dtype=int)
     
     def remember(self, state, action, reward, next_state, done):
         pass
@@ -40,24 +75,24 @@ def train():
     agent = Agent()
     game = SnakeGameAI()
     while True:
-        # Get Current State
+        # Get current state
         state_old = agent.get_state(game)
         
-        # Get Move Based On Current State
+        # Get move based on current state
         final_move = agent.get_action(state_old)
         
-        # Move And Get New State
+        # Move and get new state
         reward, done, score = game.play_step(final_move)
         state_new = agent.get_state(game)
         
-        # Train Short Memory
+        # Train short memory
         agent.train_short_memory(state_old, final_move, reward, state_new, done)
         
         # Remember
         agent.remember(state_old, final_move, reward, state_new, done)
         
         if done:
-            # Train Long Memory (Expirience Replay), Then Plot Results
+            # Train long memory (Expirience Replay), then plot results
             game.reset()
             agent.n_games += 1
             agent.train_long_memory()
@@ -72,6 +107,8 @@ def train():
             cprint(score + "\n", attrs=["bold", "underline"])
             cprint("Current Record:", attrs=["bold", "reverse"])
             cprint(record, attrs=["bold", "underline"])
+            
+            # TODO: Plot
             
 
 if __name__ == '__main__':
