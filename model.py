@@ -33,4 +33,35 @@ class QTrainer:
         self.criterion = nn.MSELoss() # Loss Function: loss = (Qnew - Q)^2 [mean squared error]
         
     def train_step(self, state, action, reward, next_state, done):
-        pass
+        state = torch.tensor(state, dtype=torch.float)
+        next_state = torch.tensor(next_state, dtype=torch.float)
+        action = torch.tensor(action, dtype=torch.long)
+        reward = torch.tensor(reward, dtype=torch.float)
+        # (n, x)
+
+        if len(state.shape) == 1:
+            # (1, x)
+            state = torch.unsqueeze(state, 0)
+            next_state = torch.unsqueeze(next_state, 0)
+            action = torch.unsqueeze(action, 0)
+            reward = torch.unsqueeze(reward, 0)
+            done = (done, ) # Convert into a tuple with one value
+            
+        # Bellman Equation: V(s) = max[a](R(s,a) + γΣ[s']P(s,a,s')V(s'))
+        # Q Update Rule: Q = model.predict(state0) Qnew = R + γ * max(Q(state1))
+        pred = self.model(state)
+        
+        target = pred.clone()
+        for idx in range(len(done)):
+            Q_new = reward[idx]
+            if not done[idx]:
+                Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx])) #Q Update Rule applied
+            
+            target[idx][torch.argmax(action).item()] = Q_new
+            
+            
+        self.optimizer.zero_grad()
+        loss = self.criterion(target, pred)
+        loss.backward()
+        
+        self.optimizer.step()
